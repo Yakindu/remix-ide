@@ -44,7 +44,6 @@ export class AbstractPanel extends HostPlugin {
    * @param {HTMLElement} content the HTMLContent of the plugin
    */
   add (view, name) {
-    console.log('panel', name, view)
     if (this.contents[name]) throw new Error(`Plugin ${name} already rendered`)
     view.style.height = '100%'
     view.style.width = '100%'
@@ -78,7 +77,6 @@ export class AbstractPanel extends HostPlugin {
    * @param {String} name The name of the plugin to display the content
    */
   showContent (name) {
-    console.log('showContent', name, this.active)
     if (!this.contents[name]) throw new Error(`Plugin ${name} is not yet activated`)
     // hiding the current view and display the `moduleName`
     if (this.active) {

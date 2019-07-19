@@ -12,8 +12,7 @@ const profile = {
   displayName: 'Vertical Icons',
   description: '',
   version: packageJson.version,
-  methods: ['select'],
-  required: true
+  methods: ['select']
 }
 
 // TODO merge with side-panel.js. VerticalIcons should not be a plugin
@@ -311,7 +310,7 @@ export class VerticalIcons extends Plugin {
     </div>
     `
 
-    this.iconKind['run'] = yo`
+    this.iconKind['udapp'] = yo`
     <div id='runIcons'>
     </div>
     `
@@ -346,7 +345,7 @@ export class VerticalIcons extends Plugin {
         ${home}
         ${this.iconKind['fileexplorer']}
         ${this.iconKind['compile']}
-        ${this.iconKind['run']}
+        ${this.iconKind['udapp']}
         ${this.iconKind['testing']}
         ${this.iconKind['analysis']}
         ${this.iconKind['debugging']}

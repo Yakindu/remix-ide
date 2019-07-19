@@ -34,7 +34,6 @@ const profile = {
   methods: [],
   events: [],
   description: ' - ',
-  required: true,
   version: packageJson.version
 }
 
@@ -200,7 +199,9 @@ class Terminal extends Plugin {
       </div>
     `
     setInterval(async () => {
-      self._view.pendingTxCount.innerHTML = await self.call('udapp', 'pendingTransactionsCount')
+      try {
+        self._view.pendingTxCount.innerHTML = await self.call('udapp', 'pendingTransactionsCount')
+      } catch (err) {}
     }, 1000)
 
     function listenOnNetwork (ev) {
