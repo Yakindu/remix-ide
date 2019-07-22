@@ -490,41 +490,37 @@ fileExplorer.prototype.copyFiles = function () {
 }
 
 // ------------------ gist publish --------------
-fileExplorer.prototype.updateGist = function () {
-  let self = this
-  var gistId = this.files.id
-  var fileList = Object.keys(this.files.files)
-  // fileList is an array of files in the github gist - not the updated one
-  var updatedFileList
+fileExplorer.prototype.updateGist = function (callback) {
+  const gistId = this.files.id
+  const fileList = Object.keys(this.files.files)
 
-  // loop through fileList and check if each element is in updatedFileList
-
-  // if one is not there in updated file list add it and make its content null
-
-
-  self.packageFiles(self.files, (error, packaged) => {
+  //packaged is the object that accessed in toGist
+  // currently allItems should replace packaged - or it should put the .filtered items into packaged.
+// I moved this.packageFiles here to grab the packaged file from... 
+  return new Promise((resolve, reject) => {
+    this.packageFiles(this.files, (error, packaged) => {
       if (error) {
         console.log(error)
+        reject(error)
       } else {
-        updatedFileList = Object.keys(packaged)
+        const updatedFileList = Object.keys(packaged)
+        const allItems = fileList
+          .filter(fileName => updatedFileList.indexOf(fileName) === -1)
+          .reduce((acc, deleteFileName) => ({
+            ...acc,
+            [deleteFileName]: {content: 0}
+          }), packaged)
+        resolve((allItems) => {}
+        )
+        // add them to the packaged object with null contents
+        
       }
     })
+  })
 
   if (!gistId) {
     tooltip('no gist content is currently loaded.')
   } else {
-    // check that the file list is still the same
-    // console.log('RS ' , this.files)
-    // make an array with just the names of the files
-    
-    // self.packageFiles(self.files, (error, packaged) => {
-    //   if (error) {
-    //     console.log(error)
-    //   } else {
-    //     console.log('file list is: ', packaged)
-    //   }
-    // })
-
     this.toGist(gistId)
   }
 }
