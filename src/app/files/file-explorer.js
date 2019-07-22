@@ -376,7 +376,7 @@ fileExplorer.prototype.uploadFile = function (event) {
   })
 }
 
-fileExplorer.prototype.toGist = function (id) {
+fileExplorer.prototype.toGist = function (id, currentGistList) {
   let proccedResult = function (error, data) {
     if (error) {
       modalDialogCustom.alert('Failed to manage gist: ' + error)
@@ -411,15 +411,25 @@ fileExplorer.prototype.toGist = function (id) {
           token: tokenAccess
         })
         if (id) {
+          const fileList = Object.keys(this.files.origGistFiles)
+          const updatedFileList = Object.keys(packaged)
+          const allItems = fileList
+            .filter(fileName => updatedFileList.indexOf(fileName) === -1)
+            .reduce((acc, deleteFileName) => ({
+              ...acc,
+              [deleteFileName]: null
+            }), packaged)
+          
           tooltip('Saving gist (' + id + ') ...')
           gists.edit({
             description: description,
             public: true,
-            files: packaged,
+            files: allItems,
             id: id
           }, (error, result) => {
             proccedResult(error, result)
           })
+
         } else {
           tooltip('Creating a new gist ...')
           gists.create({
@@ -490,39 +500,34 @@ fileExplorer.prototype.copyFiles = function () {
 }
 
 // ------------------ gist publish --------------
-fileExplorer.prototype.updateGist = function (callback) {
+fileExplorer.prototype.updateGist = function () {
   const gistId = this.files.id
-  const fileList = Object.keys(this.files.files)
+  
 
-  //packaged is the object that accessed in toGist
-  // currently allItems should replace packaged - or it should put the .filtered items into packaged.
-// I moved this.packageFiles here to grab the packaged file from... 
-  return new Promise((resolve, reject) => {
-    this.packageFiles(this.files, (error, packaged) => {
-      if (error) {
-        console.log(error)
-        reject(error)
-      } else {
-        const updatedFileList = Object.keys(packaged)
-        const allItems = fileList
-          .filter(fileName => updatedFileList.indexOf(fileName) === -1)
-          .reduce((acc, deleteFileName) => ({
-            ...acc,
-            [deleteFileName]: {content: 0}
-          }), packaged)
-        resolve((allItems) => {}
-        )
-        // add them to the packaged object with null contents
-        
-      }
-    })
-  })
-
-  if (!gistId) {
-    tooltip('no gist content is currently loaded.')
-  } else {
-    this.toGist(gistId)
-  }
+  // this.packageFiles(this.files, (error, packaged) => {
+  //   if (error) {
+  //     console.log(error)
+  //     reject(error)
+  //   } else {
+  //     const updatedFileList = Object.keys(packaged)
+  //     const allItems = fileList
+  //       .filter(fileName => updatedFileList.indexOf(fileName) === -1)
+  //       .reduce((acc, deleteFileName) => ({
+  //         ...acc,
+  //         [deleteFileName]: null
+  //       }), packaged)
+  //     if(!gistId){
+  //       tooltip('no gist content is currently loaded.')
+  //     } else {
+  //       this.toGist(gistId, allItems)
+  //     }
+  //   }
+  // })
+  if(!gistId){
+      tooltip('no gist content is currently loaded.')
+    } else {
+      this.toGist(gistId)
+    }
 }
 
 fileExplorer.prototype.createNewFile = function () {
