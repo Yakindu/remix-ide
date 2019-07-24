@@ -83,6 +83,15 @@ class Editor {
 
     ace.acequire('ace/ext/language_tools')
 
+    //Code Format
+    this.editor.commands.addCommand({
+      name: 'format',
+      bindKey: {win: "Ctrl-Shift-F", mac: "Command-Shift-F"},
+      exec: function(editor) {
+        languageServer.format(editor)
+      }
+    })
+
     // Unmap ctrl-l & cmd-l
     this.editor.commands.bindKeys({
       'ctrl-L': null,
