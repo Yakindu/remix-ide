@@ -6,6 +6,7 @@ const ace = require('brace')
 
 const globalRegistry = require('../../global/registry')
 const SourceHighlighters = require('./SourceHighlighters')
+const YakinduLanguageServer = require('./yakindu-extension')
 
 const Range = ace.acequire('ace/range').Range
 require('brace/ext/language_tools')
@@ -17,6 +18,7 @@ require('brace/mode/python')
 require('brace/mode/json')
 require('brace/theme/chaos')
 require('brace/theme/chrome')
+
 
 const css = csjs`
   .ace-editor {
@@ -38,7 +40,7 @@ document.head.appendChild(yo`
 
 class Editor {
 
-  constructor (opts = {}, themeModule) {
+    constructor (opts = {}, themeModule) {
     // Dependancies
     this._components = {}
     this._components.registry = globalRegistry
@@ -72,10 +74,12 @@ class Editor {
       json: 'ace/mode/json',
       abi: 'ace/mode/json'
     }
+    var languageServer = new YakinduLanguageServer()
 
     // Editor Setup
     const el = yo`<div id="input"></div>`
     this.editor = ace.edit(el)
+    languageServer.init(this.editor)
 
     ace.acequire('ace/ext/language_tools')
 
@@ -124,14 +128,14 @@ class Editor {
     el.className += ' ' + css['ace-editor']
     el.editor = this.editor // required to access the editor during tests
     this.render = () => el
-
+    
     // Completer for editor
     const flowCompleter = {
       getCompletions: (editor, session, pos, prefix, callback) => {
-        // @TODO add here other propositions
+        languageServer.completions(this.editor, callback)
       }
     }
-    langTools.addCompleter(flowCompleter)
+    langTools.setCompleters([flowCompleter])
 
     // zoom with Ctrl+wheel
     window.addEventListener('wheel', (e) => {
