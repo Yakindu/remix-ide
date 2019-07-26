@@ -6,10 +6,11 @@ const ace = require('brace')
 
 const globalRegistry = require('../../global/registry')
 const SourceHighlighters = require('./SourceHighlighters')
-const YakinduLanguageServer = require('./yakindu-extension')
+const AceLanguageServerService = require('./languageserver')
 
 const Range = ace.acequire('ace/range').Range
 require('brace/ext/language_tools')
+require('brace/ext/linking')
 require('brace/ext/searchbox')
 const langTools = ace.acequire('ace/ext/language_tools')
 require('ace-mode-solidity/build/remix-ide/mode-solidity')
@@ -18,7 +19,6 @@ require('brace/mode/python')
 require('brace/mode/json')
 require('brace/theme/chaos')
 require('brace/theme/chrome')
-
 
 const css = csjs`
   .ace-editor {
@@ -74,7 +74,7 @@ class Editor {
       json: 'ace/mode/json',
       abi: 'ace/mode/json'
     }
-    var languageServer = new YakinduLanguageServer()
+    var languageServer = new AceLanguageServerService()
 
     // Editor Setup
     const el = yo`<div id="input"></div>`
@@ -82,6 +82,7 @@ class Editor {
     languageServer.init(this.editor)
 
     ace.acequire('ace/ext/language_tools')
+    ace.acequire('ace/ext/linking')
 
     //Code Format
     this.editor.commands.addCommand({
@@ -131,10 +132,11 @@ class Editor {
 
     this.editor.setOptions({
       enableBasicAutocompletion: true,
-      enableLiveAutocompletion: true
+      enableLiveAutocompletion: true,
+      enableLinking: true
     })
 
-    el.className += ' ' + css['ace-editor']
+      el.className += ' ' + css['ace-editor']
     el.editor = this.editor // required to access the editor during tests
     this.render = () => el
     
@@ -175,6 +177,10 @@ class Editor {
       this.event.trigger('breakpointAdded', [this.currentSession, row])
       e.stop()
     })
+
+    this.editor.on("linkClick", e => {
+         languageServer.gotoDefinition(this.editor, e)
+    });
 
     // Do setup on initialisation here
     this.editor.on('changeSession', () => {
