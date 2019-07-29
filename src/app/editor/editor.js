@@ -6,9 +6,11 @@ const ace = require('brace')
 
 const globalRegistry = require('../../global/registry')
 const SourceHighlighters = require('./SourceHighlighters')
+const AceLanguageServerService = require('./languageserver')
 
 const Range = ace.acequire('ace/range').Range
 require('brace/ext/language_tools')
+require('brace/ext/linking')
 require('brace/ext/searchbox')
 const langTools = ace.acequire('ace/ext/language_tools')
 require('ace-mode-solidity/build/remix-ide/mode-solidity')
@@ -38,7 +40,7 @@ document.head.appendChild(yo`
 
 class Editor {
 
-  constructor (opts = {}, themeModule) {
+    constructor (opts = {}, themeModule) {
     // Dependancies
     this._components = {}
     this._components.registry = globalRegistry
@@ -72,12 +74,24 @@ class Editor {
       json: 'ace/mode/json',
       abi: 'ace/mode/json'
     }
+    var languageServer = new AceLanguageServerService()
 
     // Editor Setup
     const el = yo`<div id="input"></div>`
     this.editor = ace.edit(el)
+    languageServer.init(this.editor)
 
     ace.acequire('ace/ext/language_tools')
+    ace.acequire('ace/ext/linking')
+
+    //Code Format
+    this.editor.commands.addCommand({
+      name: 'format',
+      bindKey: {win: "Ctrl-Shift-F", mac: "Command-Shift-F"},
+      exec: function(editor) {
+        languageServer.format(editor)
+      }
+    })
 
     // Unmap ctrl-l & cmd-l
     this.editor.commands.bindKeys({
@@ -118,20 +132,21 @@ class Editor {
 
     this.editor.setOptions({
       enableBasicAutocompletion: true,
-      enableLiveAutocompletion: true
+      enableLiveAutocompletion: true,
+      enableLinking: true
     })
 
-    el.className += ' ' + css['ace-editor']
+      el.className += ' ' + css['ace-editor']
     el.editor = this.editor // required to access the editor during tests
     this.render = () => el
-
+    
     // Completer for editor
     const flowCompleter = {
       getCompletions: (editor, session, pos, prefix, callback) => {
-        // @TODO add here other propositions
+        languageServer.completions(this.editor, callback)
       }
     }
-    langTools.addCompleter(flowCompleter)
+    langTools.setCompleters([flowCompleter])
 
     // zoom with Ctrl+wheel
     window.addEventListener('wheel', (e) => {
@@ -162,6 +177,10 @@ class Editor {
       this.event.trigger('breakpointAdded', [this.currentSession, row])
       e.stop()
     })
+
+    this.editor.on("linkClick", e => {
+         languageServer.gotoDefinition(this.editor, e)
+    });
 
     // Do setup on initialisation here
     this.editor.on('changeSession', () => {
